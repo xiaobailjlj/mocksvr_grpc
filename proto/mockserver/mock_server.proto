@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package mockserver;
-option go_package = "github.com/yourusername/mock-server/proto/mockserver";
+option go_package = "github.com/xiaobailjlj/mocksvr_grpc/proto/mockserver";
 
 service MockServer {
   rpc SetMockUrl (SetMockUrlRequest) returns (SetMockUrlResponse);

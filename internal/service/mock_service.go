@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/yourusername/mock-server/internal/storage"
-	pb "github.com/yourusername/mock-server/proto/mockserver"
+	"github.com/xiaobailjlj/mocksvr_grpc/internal/storage"
+	pb "github.com/xiaobailjlj/mocksvr_grpc/proto/mockserver"
 	"time"
 )
 
