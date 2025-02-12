@@ -10,22 +10,24 @@ service MockServer {
 
 message SetMockUrlRequest {
   string url = 1;
-  string responseCode = 2;
-  string responseHeader = 3;
-  string responseBody = 4;
+  string response_code = 2;
+  string response_header = 3;
+  string response_body = 4;
   string owner = 5;
   string description = 6;
-  repeated Rule rules = 7;
+  string meta = 7;
+  repeated Rule rules = 8;
 }
 
 message Rule {
-  int32 matchType = 1;
-  string matchRule = 2;
-  string responseCode = 3;
-  string responseHeader = 4;
-  string responseBody = 5;
-  int32 delayTime = 6;
+  int32 match_type = 1;
+  string match_rule = 2;
+  string response_code = 3;
+  string response_header = 4;
+  string response_body = 5;
+  int32 delay_time = 6;
   string description = 7;
+  string meta = 8;
 }
 
 message SetMockUrlResponse {
@@ -35,12 +37,12 @@ message SetMockUrlResponse {
 
 message MockRequest {
   string url = 1;
-  string requestBody = 2;
-  string queryParams = 3;
+  string request_body = 2;
+  string query_params = 3;
 }
 
 message MockResponse {
-  string responseCode = 1;
-  string responseHeader = 2;
-  string responseBody = 3;
+  string response_code = 1;
+  string response_header = 2;
+  string response_body = 3;
 }
