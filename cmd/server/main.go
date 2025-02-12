@@ -47,7 +47,7 @@ func startGRPCMockServer(mockService *service.MockService) {
 }
 
 func main() {
-	mysqlStorage, err := storage.NewMySQLStorage("user:password@tcp(localhost:3306)/mockdb")
+	mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr")
 	if err != nil {
 		log.Fatalf("failed to connect to database: %v", err)
 	}

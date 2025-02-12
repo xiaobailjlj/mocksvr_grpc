@@ -1,3 +1,4 @@
+// internal/model/stub.go
 package model
 
 type Status string
@@ -28,4 +29,11 @@ type Rule struct {
 	DelayTime      int32             `json:"delay_time"`
 	Description    string            `json:"description"`
 	Meta           string            `json:"meta"`
+}
+
+type MockResponse struct {
+	InterfaceID    int64             `json:"interface_id"`
+	ResponseCode   string            `json:"response_code"`
+	ResponseHeader map[string]string `json:"response_header"`
+	ResponseBody   string            `json:"response_body"`
 }

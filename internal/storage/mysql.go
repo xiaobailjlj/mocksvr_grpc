@@ -1,3 +1,4 @@
+// internal/storage/mysql.go
 package storage
 
 import (
@@ -149,11 +150,4 @@ func (s *MySQLStorage) GetRules(ctx context.Context, interfaceID int64) ([]model
 	}
 
 	return rules, rows.Err()
-}
-
-type MockResponse struct {
-	InterfaceID    int64             `json:"interface_id"`
-	ResponseCode   string            `json:"response_code"`
-	ResponseHeader map[string]string `json:"response_header"`
-	ResponseBody   string            `json:"response_body"`
 }
