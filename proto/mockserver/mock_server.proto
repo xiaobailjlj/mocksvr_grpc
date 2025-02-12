@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package mockserver;
+option go_package = "github.com/yourusername/mock-server/proto/mockserver";
+
+service MockServer {
+  rpc SetMockUrl (SetMockUrlRequest) returns (SetMockUrlResponse);
+  rpc GetMockResponse (MockRequest) returns (MockResponse);
+}
+
+message SetMockUrlRequest {
+  string url = 1;
+  string responseCode = 2;
+  string responseHeader = 3;
+  string responseBody = 4;
+  string owner = 5;
+  string description = 6;
+  repeated Rule rules = 7;
+}
+
+message Rule {
+  int32 matchType = 1;
+  string matchRule = 2;
+  string responseCode = 3;
+  string responseHeader = 4;
+  string responseBody = 5;
+  int32 delayTime = 6;
+  string description = 7;
+}
+
+message SetMockUrlResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message MockRequest {
+  string url = 1;
+  string requestBody = 2;
+  string queryParams = 3;
+}
+
+message MockResponse {
+  string responseCode = 1;
+  string responseHeader = 2;
+  string responseBody = 3;
+}
