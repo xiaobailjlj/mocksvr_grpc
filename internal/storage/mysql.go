@@ -45,7 +45,7 @@ func (s *MySQLStorage) Close() error {
 	return nil
 }
 
-func (s *MySQLStorage) SaveMockUrl(ctx context.Context, url, respCode string, respHeader map[string]string, respBody, owner, desc, meta string) (int64, error) {
+func (s *MySQLStorage) SaveMockUrl(ctx context.Context, url, respCode string, respHeader map[string]string, respBody, owner, description, meta string) (int64, error) {
 	start := time.Now()
 
 	// Convert header map to JSON string
@@ -82,7 +82,7 @@ ON DUPLICATE KEY UPDATE
 	// Insert into stub_interface
 	result, err := tx.ExecContext(ctx, query,
 		url, respCode, string(headerJSON), respBody,
-		owner, desc, meta, model.StatusActive)
+		owner, description, meta, model.StatusActive)
 
 	if err != nil {
 		logger.Error("Failed to insert stub interface",
@@ -211,7 +211,7 @@ func (s *MySQLStorage) GetMockResponse(ctx context.Context, url string) (*model.
 func (s *MySQLStorage) GetRules(ctx context.Context, interfaceID int64) ([]model.Rule, error) {
 	start := time.Now()
 
-	query := `SELECT match_type, match_rule, resp_code, resp_header, resp_body, delay_time, desc, meta 
+	query := `SELECT match_type, match_rule, resp_code, resp_header, resp_body, delay_time, description, meta 
 		FROM stub_rule 
 		WHERE interface_id = ? AND status = ?`
 
