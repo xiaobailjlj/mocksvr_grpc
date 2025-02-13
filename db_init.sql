@@ -1,4 +1,5 @@
 CREATE DATABASE mocksvr;
+USE mocksvr;
 
 CREATE TABLE `stub_interface` (
                                   `id` int(32) NOT NULL AUTO_INCREMENT,
@@ -7,7 +8,7 @@ CREATE TABLE `stub_interface` (
                                   `def_resp_header` mediumtext DEFAULT NULL,
                                   `def_resp_body` mediumtext,
                                   `owner` varchar(64) DEFAULT NULL,
-                                  `desc` varchar(1024) DEFAULT NULL,
+                                  `description` varchar(1024) DEFAULT NULL,
                                   `meta` varchar(1024) DEFAULT NULL,
                                   `status` ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active',
                                   `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -25,12 +26,12 @@ CREATE TABLE `stub_rule` (
                              `resp_header` mediumtext DEFAULT NULL,
                              `resp_body` mediumtext,
                              `delay_time` int(32) DEFAULT '0' COMMENT 'ms',
-                             `desc` varchar(1024) DEFAULT NULL,
+                             `description` varchar(1024) DEFAULT NULL,
                              `meta` varchar(1024) DEFAULT NULL,
                              `status` ENUM('active', 'inactive', 'deleted') NOT NULL DEFAULT 'active',
                              `create_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
                              `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                              PRIMARY KEY (`id`),
-                             KEY `interface_id`(`interface_id`),
+                             UNIQUE KEY `unique_interface_rule` (`interface_id`, `match_type`),
                              FOREIGN KEY (`interface_id`) REFERENCES `stub_interface` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='rule';

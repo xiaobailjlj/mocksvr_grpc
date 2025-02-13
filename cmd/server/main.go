@@ -59,9 +59,8 @@ func main() {
 
 	logger.Info("Starting mock server application")
 
-	//mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr")
-	//mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr?allowNativePasswords=true")
-	mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@localhost/mocksvr")
+	mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr")
+
 	if err != nil {
 		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
