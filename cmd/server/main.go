@@ -1,11 +1,14 @@
+// cmd/server/main.go
 package main
 
 import (
-	"log"
+	"flag"
+	"go.uber.org/zap"
 	"net"
 	"net/http"
 
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/handler"
+	"github.com/xiaobailjlj/mocksvr_grpc/internal/pkg/logger"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/service"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/storage"
 	"google.golang.org/grpc"
@@ -15,9 +18,9 @@ func startStubManagementServer(stubHandler *handler.StubHandler) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/url/new", stubHandler.CreateStub)
 
-	log.Printf("Stub management server listening on :7001")
+	logger.Info("Starting stub management server", zap.String("port", "7001"))
 	if err := http.ListenAndServe(":7001", mux); err != nil {
-		log.Fatalf("failed to serve stub management server: %v", err)
+		logger.Fatal("Failed to start stub management server", zap.Error(err))
 	}
 }
 
@@ -25,33 +28,46 @@ func startHTTPMockServer(httpHandler *handler.HTTPHandler) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", httpHandler.ServeMock)
 
-	log.Printf("HTTP mock server listening on :7002")
+	logger.Info("Starting HTTP mock server", zap.String("port", "7002"))
 	if err := http.ListenAndServe(":7002", mux); err != nil {
-		log.Fatalf("failed to serve HTTP mock server: %v", err)
+		logger.Fatal("Failed to start HTTP mock server", zap.Error(err))
 	}
 }
 
 func startGRPCMockServer(mockService *service.MockService) {
 	lis, err := net.Listen("tcp", ":7003")
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		logger.Fatal("Failed to listen", zap.Error(err))
 	}
 
 	s := grpc.NewServer()
 	handler.RegisterGRPCServer(s, mockService)
 
-	log.Printf("gRPC mock server listening on :7003")
+	logger.Info("Starting gRPC mock server", zap.String("port", "7003"))
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve gRPC: %v", err)
+		logger.Fatal("Failed to serve gRPC", zap.Error(err))
 	}
 }
 
 func main() {
-	mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr")
+	debug := flag.Bool("debug", false, "Enable debug logging")
+	flag.Parse()
+
+	// Initialize logger
+	logger.InitLogger(*debug)
+	defer logger.Logger.Sync()
+
+	logger.Info("Starting mock server application")
+
+	//mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr")
+	//mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@tcp(localhost:3306)/mocksvr?allowNativePasswords=true")
+	mysqlStorage, err := storage.NewMySQLStorage("mocksvr:lujing00@localhost/mocksvr")
 	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
+		logger.Fatal("Failed to connect to database", zap.Error(err))
 	}
 	defer mysqlStorage.Close()
+
+	logger.Info("Successfully connected to database")
 
 	mockService := service.NewMockService(mysqlStorage)
 	stubHandler := handler.NewStubHandler(mockService)
@@ -60,6 +76,8 @@ func main() {
 	go startStubManagementServer(stubHandler)
 	go startHTTPMockServer(httpHandler)
 	go startGRPCMockServer(mockService)
+
+	logger.Info("All servers started successfully")
 
 	select {}
 }
