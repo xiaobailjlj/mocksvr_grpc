@@ -17,6 +17,7 @@ import (
 func startStubManagementServer(stubHandler *handler.StubHandler) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/url/new", stubHandler.CreateStub)
+	mux.HandleFunc("/v1/url/query", stubHandler.GetAllStubs)
 
 	logger.Info("Starting stub management server", zap.String("port", "7001"))
 	if err := http.ListenAndServe(":7001", mux); err != nil {
@@ -74,7 +75,7 @@ func main() {
 
 	go startStubManagementServer(stubHandler)
 	go startHTTPMockServer(httpHandler)
-	go startGRPCMockServer(mockService)
+	//go startGRPCMockServer(mockService)
 
 	logger.Info("All servers started successfully")
 

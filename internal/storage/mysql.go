@@ -266,3 +266,159 @@ func (s *MySQLStorage) GetRules(ctx context.Context, interfaceID int64) ([]model
 
 	return rules, nil
 }
+
+func (s *MySQLStorage) GetAllMockUrls(ctx context.Context, owner string, page, pageSize int) ([]*model.Interface, int, error) {
+	start := time.Now()
+
+	// Calculate offset
+	offset := (page - 1) * pageSize
+
+	// Base query
+	baseQuery := `SELECT 
+        id, url, def_resp_code, def_resp_header, def_resp_body, 
+        owner, description, meta
+    FROM stub_interface 
+    WHERE status = ?`
+	countQuery := `SELECT COUNT(*) FROM stub_interface WHERE status = ?`
+
+	args := []interface{}{model.StatusActive}
+
+	// Add owner filter if provided
+	if owner != "" {
+		baseQuery += " AND owner = ?"
+		countQuery += " AND owner = ?"
+		args = append(args, owner)
+	}
+
+	// Add pagination
+	baseQuery += " ORDER BY id DESC LIMIT ? OFFSET ?"
+	args = append(args, pageSize, offset)
+
+	// Get total count
+	var total int
+	err := s.db.QueryRowContext(ctx, countQuery, args[:len(args)-2]...).Scan(&total)
+	if err != nil {
+		logger.Error("Failed to get total count",
+			zap.String("query", countQuery),
+			zap.Error(err))
+		return nil, 0, fmt.Errorf("failed to get total count: %v", err)
+	}
+
+	// Execute main query
+	rows, err := s.db.QueryContext(ctx, baseQuery, args...)
+	if err != nil {
+		logger.Error("Failed to query mock URLs",
+			zap.String("query", baseQuery),
+			zap.Error(err))
+		return nil, 0, fmt.Errorf("failed to query mock URLs: %v", err)
+	}
+	defer rows.Close()
+
+	var interfaces []*model.Interface
+	for rows.Next() {
+		var iface model.Interface
+		var headerJSON string
+
+		err := rows.Scan(
+			&iface.ID,
+			&iface.URL,
+			&iface.ResponseCode,
+			&headerJSON,
+			&iface.ResponseBody,
+			&iface.Owner,
+			&iface.Description,
+			&iface.Meta,
+		)
+		if err != nil {
+			logger.Error("Failed to scan mock URL row",
+				zap.Error(err))
+			return nil, 0, fmt.Errorf("failed to scan mock URL row: %v", err)
+		}
+
+		// Parse header JSON
+		if headerJSON != "" {
+			if err := json.Unmarshal([]byte(headerJSON), &iface.ResponseHeader); err != nil {
+				logger.Error("Failed to unmarshal response header",
+					zap.String("header", headerJSON),
+					zap.Error(err))
+				return nil, 0, fmt.Errorf("failed to unmarshal response header: %v", err)
+			}
+		}
+
+		interfaces = append(interfaces, &iface)
+	}
+
+	logger.Info("Successfully retrieved mock URLs",
+		zap.Int("count", len(interfaces)),
+		zap.Int("total", total),
+		zap.Int("page", page),
+		zap.Int("pageSize", pageSize),
+		zap.Duration("duration", time.Since(start)))
+
+	return interfaces, total, nil
+}
+
+func (s *MySQLStorage) GetRulesByInterfaceID(ctx context.Context, interfaceID int64) ([]*model.Rule, error) {
+	start := time.Now()
+
+	query := `SELECT 
+        id, interface_id, match_type, match_rule, 
+        resp_code, resp_header, resp_body,
+        delay_time, description, meta
+    FROM stub_rule 
+    WHERE interface_id = ? AND status = ?
+    ORDER BY id ASC`
+
+	rows, err := s.db.QueryContext(ctx, query, interfaceID, model.StatusActive)
+	if err != nil {
+		logger.Error("Failed to query rules",
+			zap.String("query", query),
+			zap.Int64("interfaceID", interfaceID),
+			zap.Error(err))
+		return nil, fmt.Errorf("failed to query rules: %v", err)
+	}
+	defer rows.Close()
+
+	var rules []*model.Rule
+	for rows.Next() {
+		var rule model.Rule
+		var headerJSON string
+
+		err := rows.Scan(
+			&rule.ID,
+			&rule.InterfaceID,
+			&rule.MatchType,
+			&rule.MatchRule,
+			&rule.ResponseCode,
+			&headerJSON,
+			&rule.ResponseBody,
+			&rule.DelayTime,
+			&rule.Description,
+			&rule.Meta,
+		)
+		if err != nil {
+			logger.Error("Failed to scan rule row",
+				zap.Error(err))
+			return nil, fmt.Errorf("failed to scan rule row: %v", err)
+		}
+
+		// Parse header JSON
+		if headerJSON != "" {
+			if err := json.Unmarshal([]byte(headerJSON), &rule.ResponseHeader); err != nil {
+				logger.Error("Failed to unmarshal rule response header",
+					zap.String("header", headerJSON),
+					zap.Error(err))
+				return nil, fmt.Errorf("failed to unmarshal rule response header: %v", err)
+			}
+		}
+
+		rules = append(rules, &rule)
+	}
+
+	logger.Info("Successfully retrieved rules",
+		zap.Int64("interfaceID", interfaceID),
+		zap.Int("count", len(rules)),
+		zap.Duration("duration", time.Since(start)))
+
+	return rules, nil
+}

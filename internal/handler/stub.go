@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/model"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/service"
@@ -66,6 +67,44 @@ func (h *StubHandler) CreateStub(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp, err := h.mockService.SetMockUrl(context.Background(), pbReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *StubHandler) GetAllStubs(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Parse query parameters
+	owner := r.URL.Query().Get("owner")
+	page := 1
+	pageSize := 10
+
+	if pageStr := r.URL.Query().Get("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if sizeStr := r.URL.Query().Get("size"); sizeStr != "" {
+		if s, err := strconv.Atoi(sizeStr); err == nil && s > 0 {
+			pageSize = s
+		}
+	}
+
+	pbReq := &pb.GetAllMockUrlsRequest{
+		Owner:    owner,
+		Page:     int32(page),
+		PageSize: int32(pageSize),
+	}
+
+	resp, err := h.mockService.GetAllMockUrls(context.Background(), pbReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

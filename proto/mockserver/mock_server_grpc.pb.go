@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v5.29.3
-// source: proto/mockserver/mock_server.proto
+// source: mockserver/mock_server.proto
 
 package mockserver
 
@@ -137,5 +137,5 @@ var MockServer_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/mockserver/mock_server.proto",
+	Metadata: "mockserver/mock_server.proto",
 }

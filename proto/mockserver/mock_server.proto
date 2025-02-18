@@ -46,3 +46,30 @@ message MockResponse {
   string response_header = 2;
   string response_body = 3;
 }
+
+message GetAllMockUrlsRequest {
+  string owner = 1;
+  int32 page = 2;
+  int32 page_size = 3;
+}
+
+message GetAllMockUrlsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MockUrl urls = 3;
+  int32 total = 4;
+  int32 current_page = 5;
+  int32 page_size = 6;
+}
+
+message MockUrl {
+  int64 id = 1;
+  string url = 2;
+  string response_code = 3;
+  string response_header = 4;
+  string response_body = 5;
+  string owner = 6;
+  string description = 7;
+  string meta = 8;
+  repeated Rule rules = 9;
+}
