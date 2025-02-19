@@ -126,6 +126,11 @@ func (s *MySQLStorage) SaveRule(ctx context.Context, interfaceID int64, rule *mo
 		return fmt.Errorf("failed to marshal rule response header: %v", err)
 	}
 
+	logger.Debug("SaveRule",
+		zap.Int64("interfaceID", interfaceID),
+		zap.Int32("matchType", rule.MatchType),
+		zap.Error(err))
+
 	// SaveRule query
 	query := `INSERT INTO stub_rule (
     interface_id, match_type, match_rule, 
@@ -362,7 +367,7 @@ func (s *MySQLStorage) GetRulesByInterfaceID(ctx context.Context, interfaceID in
 	start := time.Now()
 
 	query := `SELECT 
-        id, interface_id, match_type, match_rule, 
+        match_type, match_rule, 
         resp_code, resp_header, resp_body,
         delay_time, description, meta
     FROM stub_rule 
@@ -385,8 +390,8 @@ func (s *MySQLStorage) GetRulesByInterfaceID(ctx context.Context, interfaceID in
 		var headerJSON string
 
 		err := rows.Scan(
-			&rule.ID,
-			&rule.InterfaceID,
+			//&rule.ID,
+			//&rule.interfaceID,
 			&rule.MatchType,
 			&rule.MatchRule,
 			&rule.ResponseCode,

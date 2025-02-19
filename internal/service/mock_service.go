@@ -24,8 +24,26 @@ func NewMockService(storage *storage.MySQLStorage) *MockService {
 func (s *MockService) SetMockUrl(ctx context.Context, req *pb.SetMockUrlRequest) (*pb.SetMockUrlResponse, error) {
 	logger.Info("Setting mock URL",
 		zap.String("url", req.Url),
+		zap.String("response_code", req.ResponseCode),
+		zap.String("response_header", req.ResponseHeader),
+		zap.String("response_body", req.ResponseBody),
 		zap.String("owner", req.Owner),
+		zap.String("description", req.Description),
+		zap.String("meta", req.Meta),
 		zap.Int("rules_count", len(req.Rules)))
+
+	for i, rule := range req.Rules {
+		logger.Info("Rule details",
+			zap.Int("rule_index", i),
+			zap.Int32("match_type", rule.MatchType),
+			zap.String("match_rule", rule.MatchRule),
+			zap.String("response_code", rule.ResponseCode),
+			zap.String("response_header", rule.ResponseHeader),
+			zap.String("response_body", rule.ResponseBody),
+			zap.Int32("delay_time", rule.DelayTime),
+			zap.String("description", rule.Description),
+			zap.String("meta", rule.Meta))
+	}
 
 	// Parse header JSON
 	var respHeader map[string]string
