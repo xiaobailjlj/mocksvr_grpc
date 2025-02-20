@@ -66,24 +66,33 @@ func (s *MySQLStorage) SaveMockUrl(ctx context.Context, url, respCode string, re
 	}
 	defer tx.Rollback()
 
-	query := `INSERT INTO stub_interface (
-    url, def_resp_code, def_resp_header, def_resp_body, 
-    owner, description, meta, status
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-ON DUPLICATE KEY UPDATE
-    def_resp_code = VALUES(def_resp_code),
-    def_resp_header = VALUES(def_resp_header),
-    def_resp_body = VALUES(def_resp_body),
-    owner = VALUES(owner),
-    description = VALUES(description),
-    meta = VALUES(meta),
-    status = VALUES(status)`
+	// First, try to get existing ID
+	var existingID int64
+	err = tx.QueryRowContext(ctx, "SELECT id FROM stub_interface WHERE url = ?", url).Scan(&existingID)
+	if err != nil && err != sql.ErrNoRows {
+		logger.Error("Failed to query existing interface",
+			zap.String("url", url),
+			zap.Error(err))
+		return 0, fmt.Errorf("failed to query existing interface: %v", err)
+	}
 
-	// Insert into stub_interface
+	query := `INSERT INTO stub_interface (
+        url, def_resp_code, def_resp_header, def_resp_body, 
+        owner, description, meta, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+        def_resp_code = VALUES(def_resp_code),
+        def_resp_header = VALUES(def_resp_header),
+        def_resp_body = VALUES(def_resp_body),
+        owner = VALUES(owner),
+        description = VALUES(description),
+        meta = VALUES(meta),
+        status = VALUES(status)`
+
+	// Insert or update stub_interface
 	result, err := tx.ExecContext(ctx, query,
 		url, respCode, string(headerJSON), respBody,
 		owner, description, meta, model.StatusActive)
-
 	if err != nil {
 		logger.Error("Failed to insert stub interface",
 			zap.String("query", query),
@@ -94,11 +103,10 @@ ON DUPLICATE KEY UPDATE
 		return 0, fmt.Errorf("failed to insert stub interface: %v", err)
 	}
 
+	// Get the ID - use existing ID if it was an update
 	id, err := result.LastInsertId()
-	if err != nil {
-		logger.Error("Failed to get last insert ID",
-			zap.Error(err))
-		return 0, err
+	if err != nil || id == 0 {
+		id = existingID // Use the existing ID if this was an update
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -110,6 +118,7 @@ ON DUPLICATE KEY UPDATE
 	logger.Info("Successfully saved mock URL",
 		zap.Int64("id", id),
 		zap.String("url", url),
+		zap.Bool("isUpdate", existingID > 0),
 		zap.Duration("duration", time.Since(start)))
 
 	return id, nil
