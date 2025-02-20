@@ -3,6 +3,8 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"github.com/xiaobailjlj/mocksvr_grpc/internal/pkg/logger"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"strconv"
@@ -42,6 +44,9 @@ func (h *HTTPHandler) ServeMock(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set(k, v)
 		}
 	}
+
+	logger.Info("Response with code:",
+		zap.String("ResponseCode", resp.ResponseCode))
 
 	if code, err := strconv.Atoi(resp.ResponseCode); err == nil {
 		w.WriteHeader(code)
