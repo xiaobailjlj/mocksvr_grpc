@@ -73,3 +73,13 @@ message MockUrl {
   string meta = 8;
   repeated Rule rules = 9;
 }
+
+message GetRuleRequest {
+  int64 id = 1;
+}
+
+message GetRuleResponse {
+  bool success = 1;
+  string message = 2;
+  repeated MockUrl urls = 3;
+}

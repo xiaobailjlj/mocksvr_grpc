@@ -14,13 +14,30 @@ import (
 	"google.golang.org/grpc"
 )
 
+func enableCORS(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "OPTIONS, GET, POST, PUT, DELETE")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+
+		// Handle preflight OPTIONS request
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func startStubManagementServer(stubHandler *handler.StubHandler) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/url/new", stubHandler.CreateStub)
-	mux.HandleFunc("/v1/url/query", stubHandler.GetAllStubs)
+	mux.HandleFunc("/v1/url/query/all", stubHandler.GetAllStubs)
+	mux.HandleFunc("/v1/url/query/rule", stubHandler.GetRules)
 
 	logger.Info("Starting stub management server", zap.String("port", "7001"))
-	if err := http.ListenAndServe(":7001", mux); err != nil {
+	if err := http.ListenAndServe(":7001", enableCORS(mux)); err != nil {
 		logger.Fatal("Failed to start stub management server", zap.Error(err))
 	}
 }
@@ -30,7 +47,7 @@ func startHTTPMockServer(httpHandler *handler.HTTPHandler) {
 	mux.HandleFunc("/", httpHandler.ServeMock)
 
 	logger.Info("Starting HTTP mock server", zap.String("port", "7002"))
-	if err := http.ListenAndServe(":7002", mux); err != nil {
+	if err := http.ListenAndServe(":7002", enableCORS(mux)); err != nil {
 		logger.Fatal("Failed to start HTTP mock server", zap.Error(err))
 	}
 }

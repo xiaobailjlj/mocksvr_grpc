@@ -285,3 +285,81 @@ func (s *MockService) GetAllMockUrls(ctx context.Context, req *pb.GetAllMockUrls
 		PageSize:    req.PageSize,
 	}, nil
 }
+
+func (s *MockService) GetRule(ctx context.Context, req *pb.GetRuleRequest) (*pb.GetRuleResponse, error) {
+	logger.Info("Getting Rules for one url",
+		zap.Int64("id", req.Id))
+
+	interfaces, err := s.storage.GetMockUrl(ctx, req.Id)
+	if err != nil {
+		logger.Error("Failed to get mock URLs",
+			zap.Error(err))
+		return nil, err
+	}
+
+	pbUrls := make([]*pb.MockUrl, 0, len(interfaces))
+	for _, iface := range interfaces {
+		// Convert interface header to JSON string
+		headerJSON, err := json.Marshal(iface.ResponseHeader)
+		if err != nil {
+			logger.Error("Failed to marshal interface response header",
+				zap.Int64("interface_id", iface.ID),
+				zap.Error(err))
+			return nil, err
+		}
+
+		// Get rules for each interface
+		rules, err := s.storage.GetRulesByInterfaceID(ctx, iface.ID)
+		if err != nil {
+			logger.Error("Failed to get rules for interface",
+				zap.Int64("interface_id", iface.ID),
+				zap.Error(err))
+			return nil, err
+		}
+
+		// Convert rules to protobuf format
+		pbRules := make([]*pb.Rule, 0, len(rules))
+		for _, rule := range rules {
+			// Convert rule header to JSON string
+			ruleHeaderJSON, err := json.Marshal(rule.ResponseHeader)
+			if err != nil {
+				logger.Error("Failed to marshal rule response header",
+					zap.Int64("interface_id", iface.ID),
+					zap.Error(err))
+				return nil, err
+			}
+
+			pbRules = append(pbRules, &pb.Rule{
+				MatchType:      rule.MatchType,
+				MatchRule:      rule.MatchRule,
+				ResponseCode:   rule.ResponseCode,
+				ResponseHeader: string(ruleHeaderJSON),
+				ResponseBody:   rule.ResponseBody,
+				DelayTime:      rule.DelayTime,
+				Description:    rule.Description,
+				Meta:           rule.Meta,
+			})
+		}
+
+		pbUrls = append(pbUrls, &pb.MockUrl{
+			Id:             iface.ID,
+			Url:            iface.URL,
+			ResponseCode:   iface.ResponseCode,
+			ResponseHeader: string(headerJSON),
+			ResponseBody:   iface.ResponseBody,
+			Owner:          iface.Owner,
+			Description:    iface.Description,
+			Meta:           iface.Meta,
+			Rules:          pbRules,
+		})
+	}
+
+	logger.Info("Retrieved mock URLs successfully",
+		zap.Int("count", len(pbUrls)))
+
+	return &pb.GetRuleResponse{
+		Success: true,
+		Message: "Mock URLs retrieved successfully",
+		Urls:    pbUrls,
+	}, nil
+}

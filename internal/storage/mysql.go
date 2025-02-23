@@ -372,6 +372,66 @@ func (s *MySQLStorage) GetAllMockUrls(ctx context.Context, owner string, page, p
 	return interfaces, total, nil
 }
 
+func (s *MySQLStorage) GetMockUrl(ctx context.Context, urlId int64) ([]*model.Interface, error) {
+	// Base query
+	baseQuery := `SELECT 
+        id, url, def_resp_code, def_resp_header, def_resp_body, 
+        owner, description, meta
+    FROM stub_interface 
+    WHERE status = ? AND id = ?`
+
+	args := []interface{}{model.StatusActive, urlId}
+
+	// Execute main query
+	rows, err := s.db.QueryContext(ctx, baseQuery, args...)
+	if err != nil {
+		logger.Error("Failed to query mock URLs",
+			zap.String("query", baseQuery),
+			zap.Error(err))
+		return nil, fmt.Errorf("failed to query mock URLs: %v", err)
+	}
+	defer rows.Close()
+
+	var interfaces []*model.Interface
+	for rows.Next() {
+		var iface model.Interface
+		var headerJSON string
+
+		err := rows.Scan(
+			&iface.ID,
+			&iface.URL,
+			&iface.ResponseCode,
+			&headerJSON,
+			&iface.ResponseBody,
+			&iface.Owner,
+			&iface.Description,
+			&iface.Meta,
+		)
+		if err != nil {
+			logger.Error("Failed to scan mock URL row",
+				zap.Error(err))
+			return nil, fmt.Errorf("failed to scan mock URL row: %v", err)
+		}
+
+		// Parse header JSON
+		if headerJSON != "" {
+			if err := json.Unmarshal([]byte(headerJSON), &iface.ResponseHeader); err != nil {
+				logger.Error("Failed to unmarshal response header",
+					zap.String("header", headerJSON),
+					zap.Error(err))
+				return nil, fmt.Errorf("failed to unmarshal response header: %v", err)
+			}
+		}
+
+		interfaces = append(interfaces, &iface)
+	}
+
+	logger.Info("Successfully retrieved mock URLs",
+		zap.Int("count", len(interfaces)))
+
+	return interfaces, nil
+}
+
 func (s *MySQLStorage) GetRulesByInterfaceID(ctx context.Context, interfaceID int64) ([]*model.Rule, error) {
 	start := time.Now()
 
