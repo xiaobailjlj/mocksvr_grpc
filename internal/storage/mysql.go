@@ -496,3 +496,37 @@ func (s *MySQLStorage) GetRulesByInterfaceID(ctx context.Context, interfaceID in
 
 	return rules, nil
 }
+
+func (s *MySQLStorage) DeleteMockUrl(ctx context.Context, id int64) error {
+	start := time.Now()
+
+	query := `UPDATE stub_interface SET status = ? WHERE id = ?`
+
+	result, err := s.db.ExecContext(ctx, query, model.StatusDeleted, id)
+	if err != nil {
+		logger.Error("Failed to delete stub interface",
+			zap.String("query", query),
+			zap.Int64("id", id),
+			zap.Error(err))
+		return fmt.Errorf("failed to delete stub interface: %v", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		logger.Error("Failed to get rows affected",
+			zap.Error(err))
+		return fmt.Errorf("failed to get rows affected: %v", err)
+	}
+
+	if rowsAffected == 0 {
+		logger.Warn("No stub interface found with the given ID",
+			zap.Int64("id", id))
+		return fmt.Errorf("no stub interface found with ID %d", id)
+	}
+
+	logger.Info("Successfully deleted mock URL",
+		zap.Int64("id", id),
+		zap.Duration("duration", time.Since(start)))
+
+	return nil
+}

@@ -33,6 +33,7 @@ func enableCORS(next http.Handler) http.Handler {
 func startStubManagementServer(stubHandler *handler.StubHandler) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/url/new", stubHandler.CreateStub)
+	mux.HandleFunc("/v1/url/delete", stubHandler.DeleteStub)
 	mux.HandleFunc("/v1/url/query/all", stubHandler.GetAllStubs)
 	mux.HandleFunc("/v1/url/query/rule", stubHandler.GetRules)
 

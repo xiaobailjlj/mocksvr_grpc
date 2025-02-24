@@ -363,3 +363,22 @@ func (s *MockService) GetRule(ctx context.Context, req *pb.GetRuleRequest) (*pb.
 		Urls:    pbUrls,
 	}, nil
 }
+
+func (s *MockService) DeleteStub(ctx context.Context, req *pb.DeleteStubRequest) (*pb.DeleteStubResponse, error) {
+	logger.Info("Delete stub",
+		zap.Int64("id", req.Id))
+
+	err := s.storage.DeleteMockUrl(ctx, req.Id)
+	if err != nil {
+		logger.Error("Failed to get mock URLs",
+			zap.Error(err))
+		return nil, err
+	}
+
+	logger.Info("Delete stub successfully",
+		zap.Int64("id", req.Id))
+
+	return &pb.DeleteStubResponse{
+		Success: true,
+	}, nil
+}

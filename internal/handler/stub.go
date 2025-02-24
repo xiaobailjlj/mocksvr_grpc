@@ -76,6 +76,33 @@ func (h *StubHandler) CreateStub(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
+func (h *StubHandler) DeleteStub(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	urlIdStr := r.URL.Query().Get("url_id")
+	urlId, err := strconv.ParseInt(urlIdStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid url_id", http.StatusBadRequest)
+		return
+	}
+
+	pbReq := &pb.DeleteStubRequest{
+		Id: urlId,
+	}
+
+	resp, err := h.mockService.DeleteStub(context.Background(), pbReq)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
 func (h *StubHandler) GetAllStubs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

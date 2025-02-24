@@ -83,3 +83,11 @@ message GetRuleResponse {
   string message = 2;
   repeated MockUrl urls = 3;
 }
+
+message DeleteStubRequest {
+  int64 id = 1;
+}
+
+message DeleteStubResponse {
+  bool success = 1;
+}
