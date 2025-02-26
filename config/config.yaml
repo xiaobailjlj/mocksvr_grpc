@@ -1,0 +1,20 @@
+# Server Configuration
+server:
+  debug: false
+
+# Database Configuration
+database:
+  dsn: "mocksvr:lujing00@tcp(localhost:3306)/mocksvr"
+
+# HTTP Management Server Configuration
+management:
+  port: 7001
+
+# HTTP Mock Server Configuration
+mockhttp:
+  port: 7002
+
+# gRPC Mock Server Configuration
+mockgrpc:
+  port: 7003
+  enabled: false
