@@ -1,6 +1,6 @@
 # Server Configuration
 server:
-  debug: false
+  debug: true
 
 # Database Configuration
 database:
