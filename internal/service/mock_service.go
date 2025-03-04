@@ -204,11 +204,12 @@ func (s *MockService) GetMockResponse(ctx context.Context, req *pb.MockRequest) 
 
 func (s *MockService) GetAllMockUrls(ctx context.Context, req *pb.GetAllMockUrlsRequest) (*pb.GetAllMockUrlsResponse, error) {
 	logger.Info("Getting all mock URLs",
+		zap.String("keyword", req.Keyword),
 		zap.String("owner", req.Owner),
 		zap.Int32("page", req.Page),
 		zap.Int32("pageSize", req.PageSize))
 
-	interfaces, total, err := s.storage.GetAllMockUrls(ctx, req.Owner, int(req.Page), int(req.PageSize))
+	interfaces, total, err := s.storage.GetAllMockUrls(ctx, req.Keyword, req.Owner, int(req.Page), int(req.PageSize))
 	if err != nil {
 		logger.Error("Failed to get mock URLs",
 			zap.Error(err))

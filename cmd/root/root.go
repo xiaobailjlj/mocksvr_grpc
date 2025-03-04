@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/config"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/pkg/logger"
 	"go.uber.org/zap"
+	"os"
 )
 
 var (
@@ -65,44 +63,7 @@ func initConfig() {
 	if err := viper.ReadInConfig(); err == nil {
 		fmt.Println("Using config file:", viper.ConfigFileUsed())
 	} else {
-		// Check if the error is "config file not found"
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Create default config file
-			defaultConfigPath := filepath.Join("config", "config.yaml")
-			os.MkdirAll(filepath.Dir(defaultConfigPath), 0755)
-			defaultConfig := `# Server Configuration
-server:
-  debug: false
-  
-# Database Configuration
-database:
-  dsn: "mocksvr:lujing00@tcp(localhost:3306)/mocksvr"
-
-# HTTP Management Server Configuration
-management:
-  port: 7001
-  
-# HTTP Mock Server Configuration
-mockhttp:
-  port: 7002
-  
-# gRPC Mock Server Configuration
-mockgrpc:
-  port: 7003
-  enabled: false
-`
-			if err := os.WriteFile(defaultConfigPath, []byte(defaultConfig), 0644); err == nil {
-				fmt.Println("Created default config file at:", defaultConfigPath)
-				viper.SetConfigFile(defaultConfigPath)
-				if err := viper.ReadInConfig(); err != nil {
-					fmt.Println("Warning: Could not read created config file:", err)
-				}
-			} else {
-				fmt.Println("Warning: Could not create default config file:", err)
-			}
-		} else {
-			fmt.Println("Warning: Error reading config file:", err)
-		}
+		fmt.Println("Error reading config file:", err)
 	}
 
 	// Unmarshal config into struct

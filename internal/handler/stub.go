@@ -111,6 +111,7 @@ func (h *StubHandler) GetAllStubs(w http.ResponseWriter, r *http.Request) {
 
 	// Parse query parameters
 	owner := r.URL.Query().Get("owner")
+	keyword := r.URL.Query().Get("keyword")
 	page := 1
 	pageSize := 10
 
@@ -127,6 +128,7 @@ func (h *StubHandler) GetAllStubs(w http.ResponseWriter, r *http.Request) {
 
 	pbReq := &pb.GetAllMockUrlsRequest{
 		Owner:    owner,
+		Keyword:  keyword,
 		Page:     int32(page),
 		PageSize: int32(pageSize),
 	}

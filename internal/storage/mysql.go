@@ -281,7 +281,7 @@ func (s *MySQLStorage) GetRules(ctx context.Context, interfaceID int64) ([]model
 	return rules, nil
 }
 
-func (s *MySQLStorage) GetAllMockUrls(ctx context.Context, owner string, page, pageSize int) ([]*model.Interface, int, error) {
+func (s *MySQLStorage) GetAllMockUrls(ctx context.Context, keyword string, owner string, page, pageSize int) ([]*model.Interface, int, error) {
 	start := time.Now()
 
 	// Calculate offset
@@ -296,6 +296,13 @@ func (s *MySQLStorage) GetAllMockUrls(ctx context.Context, owner string, page, p
 	countQuery := `SELECT COUNT(*) FROM stub_interface WHERE status = ?`
 
 	args := []interface{}{model.StatusActive}
+
+	// Add keyword filter if provided
+	if keyword != "" {
+		baseQuery += " AND url LIKE ?"
+		countQuery += " AND url LIKE ?"
+		args = append(args, "%"+keyword+"%")
+	}
 
 	// Add owner filter if provided
 	if owner != "" {

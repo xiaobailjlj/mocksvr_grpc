@@ -49,8 +49,9 @@ message MockResponse {
 
 message GetAllMockUrlsRequest {
   string owner = 1;
-  int32 page = 2;
-  int32 page_size = 3;
+  string keyword = 2;
+  int32 page = 3;
+  int32 page_size = 4;
 }
 
 message GetAllMockUrlsResponse {
