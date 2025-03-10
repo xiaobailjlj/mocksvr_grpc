@@ -3,8 +3,10 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/xiaobailjlj/mocksvr_grpc/internal/model"
@@ -84,6 +86,80 @@ func (h *StubHandler) CreateStubGin(c *gin.Context) {
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
+	}
+
+	// Validate URL format
+	if !strings.HasPrefix(req.URL, "/") {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "URL must start with a forward slash (/)",
+		})
+		return
+	}
+
+	// Validate response code is a valid HTTP status code
+	code, err := strconv.Atoi(req.ResponseCode)
+	if err != nil || code < 100 || code > 599 {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Response code must be a valid HTTP status code (100-599)",
+		})
+		return
+	}
+
+	// Validate response header contains content-type
+	if _, hasContentType := req.ResponseHeader["Content-Type"]; !hasContentType {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Response header must include Content-Type",
+		})
+		return
+	}
+
+	// Validate rules if they exist
+	if len(req.Rules) > 0 {
+		for i, rule := range req.Rules {
+			// Validate match type is within valid range
+			if rule.MatchType < 1 || rule.MatchType > 3 {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": fmt.Sprintf("Invalid match_type in rule %d: must be between 1 and 3", i+1),
+				})
+				return
+			}
+
+			// Validate rule response code
+			ruleCode, err := strconv.Atoi(rule.ResponseCode)
+			if err != nil || ruleCode < 100 || ruleCode > 599 {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": fmt.Sprintf("Invalid response_code in rule %d: must be a valid HTTP status code", i+1),
+				})
+				return
+			}
+
+			// Validate rule has content-type in header
+			if _, hasContentType := rule.ResponseHeader["Content-Type"]; !hasContentType {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"error": fmt.Sprintf("Rule %d is missing Content-Type in response_header", i+1),
+				})
+				return
+			}
+
+			// Additional rule validation for match_rule based on match_type
+			switch rule.MatchType {
+			case 1: // Query param
+				if !strings.Contains(rule.MatchRule, "=") {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": fmt.Sprintf("Rule %d has match_type 1 but match_rule is not a valid query parameter format", i+1),
+					})
+					return
+				}
+			case 2: // JSON body
+				var jsonTest map[string]interface{}
+				if err := json.Unmarshal([]byte(rule.MatchRule), &jsonTest); err != nil {
+					c.JSON(http.StatusBadRequest, gin.H{
+						"error": fmt.Sprintf("Rule %d has match_type 2 but match_rule is not valid JSON", i+1),
+					})
+					return
+				}
+			}
+		}
 	}
 
 	headerJSON, err := json.Marshal(req.ResponseHeader)

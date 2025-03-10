@@ -12,41 +12,26 @@ const (
 )
 
 type StubRequest struct {
-	URL            string            `json:"url"`
-	ResponseCode   string            `json:"response_code"`
-	ResponseHeader map[string]string `json:"response_header"`
-	ResponseBody   string            `json:"response_body"`
-	Owner          string            `json:"owner"`
+	URL            string            `json:"url" binding:"required"`
+	ResponseCode   string            `json:"response_code" binding:"required"`
+	ResponseHeader map[string]string `json:"response_header" binding:"required"`
+	ResponseBody   string            `json:"response_body" binding:"required"`
+	Owner          string            `json:"owner" binding:"required"`
 	Description    string            `json:"description"`
 	Meta           string            `json:"meta"`
 	Rules          []Rule            `json:"rules"`
 }
 
 type Rule struct {
-	MatchType      int32             `json:"match_type"`
-	MatchRule      string            `json:"match_rule"`
-	ResponseCode   string            `json:"response_code"`
-	ResponseHeader map[string]string `json:"response_header"`
-	ResponseBody   string            `json:"response_body"`
+	MatchType      int32             `json:"match_type" binding:"required"`
+	MatchRule      string            `json:"match_rule" binding:"required"`
+	ResponseCode   string            `json:"response_code" binding:"required"`
+	ResponseHeader map[string]string `json:"response_header" binding:"required"`
+	ResponseBody   string            `json:"response_body" binding:"required"`
 	DelayTime      int32             `json:"delay_time"`
 	Description    string            `json:"description"`
 	Meta           string            `json:"meta"`
 }
-
-//type Rule struct {
-//	ID             int64
-//	InterfaceID    int64
-//	MatchType      int32
-//	MatchRule      string
-//	ResponseCode   string
-//	ResponseHeader map[string]string
-//	ResponseBody   string
-//	DelayTime      int32
-//	Description    string
-//	Meta           string
-//	CreatedAt      time.Time
-//	UpdatedAt      time.Time
-//}
 
 type Interface struct {
 	ID             int64
