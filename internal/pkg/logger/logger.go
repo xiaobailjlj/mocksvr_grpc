@@ -8,10 +8,17 @@ import (
 
 var Logger *zap.Logger
 
-func InitLogger(debug bool) {
+func InitLogger(runmode string) {
 	config := zap.NewProductionConfig()
-	if debug {
+	switch runmode {
+	case "debug":
 		config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
+	case "test":
+		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
+	case "release":
+		config.Level = zap.NewAtomicLevelAt(zap.WarnLevel)
+	default:
+		config.Level = zap.NewAtomicLevelAt(zap.InfoLevel)
 	}
 
 	config.EncoderConfig.TimeKey = "timestamp"

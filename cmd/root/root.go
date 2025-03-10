@@ -38,10 +38,6 @@ func init() {
 
 	// Global flags
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is ./config/config.yaml)")
-	RootCmd.PersistentFlags().Bool("debug", false, "enable debug logging")
-
-	// Bind flags to viper
-	viper.BindPFlag("server.debug", RootCmd.PersistentFlags().Lookup("debug"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -72,10 +68,10 @@ func initConfig() {
 	}
 
 	// Initialize logger based on config
-	logger.InitLogger(cfg.Server.Debug)
+	logger.InitLogger(cfg.Server.RunMode)
 	logger.Info("Configuration loaded successfully",
 		zap.String("config_file", viper.ConfigFileUsed()),
-		zap.Bool("debug", cfg.Server.Debug))
+		zap.String("run_mode", cfg.Server.RunMode))
 }
 
 // GetConfig returns the current configuration

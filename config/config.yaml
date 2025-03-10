@@ -1,6 +1,6 @@
 # Server Configuration
 server:
-  debug: true
+  runmode: debug  # release, test, debug
 
 # Database Configuration
 database:

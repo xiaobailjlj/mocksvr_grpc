@@ -11,7 +11,7 @@ type Config struct {
 
 // ServerConfig contains general server settings
 type ServerConfig struct {
-	Debug bool `mapstructure:"debug"`
+	RunMode string `mapstructure:"runmode"`
 }
 
 // DatabaseConfig contains database connection settings
